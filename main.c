@@ -1,32 +1,46 @@
 #include <ncurses.h>
+#include <math.h>
 
-int main()
+#include "maths.h"
+#include "shapes.h"
+#include "shapes.c"
+
+#define DOT 46
+
+int
+main(int argc, char * argv[])
 {
-  int ch;
+  int height, width;
 
-	initscr();
-	raw();
-	keypad(stdscr, TRUE);
-	noecho();
+  initscr();
+  curs_set(0);
+  start_color();
+  use_default_colors();
 
-  printw("Type any character to see it in bold\n");
-	ch = getch();
+//  raw();
+//  noecho();
+//  keypad(stdscr, TRUE);
 
-	if (ch == KEY_F(1))
-	{
-		printw("F1 Key pressed");
-	}
-	else
-	{
-	  printw("The pressed key is ");
-		attron(A_BOLD);
-		printw("%c", ch);
-		attroff(A_BOLD);
-	}
+  getmaxyx(stdscr, height, width);
 
-	refresh();
+  printw("%d, %d", height, width);
+
+  Point centre;
+  centre.y = height / 2;
+  centre.x = width / 2;
+
+  Circle circle;
+  circle.radius = (2 * height > width ? width / 2 : height) / 2;
+  circle.centre = centre;
+
+  init_pair(1, COLOR_RED, COLOR_RED);
+  attron(COLOR_PAIR(1));
+  draw_circle(circle, DOT);
+  attroff(COLOR_PAIR(1));
+
+  refresh();
   getch();
-	endwin();
+  endwin();
 
-	return 0;
+  return 0;
 }

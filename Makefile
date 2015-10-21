@@ -1,6 +1,6 @@
 CC         = gcc
 CFLAGS     = -g
-LIBS       = -lncurses
+LIBS       = -lm -lncurses
 SOURCES    = main.c
 EXECUTABLE = game-of-life
 
