@@ -2,8 +2,10 @@ void
 draw_circle(Circle circle, char dot)
 {
   float deg;
-  int y, x;
-  int height = circle.radius, width = 2 * circle.radius;
+  int y, x, height, width;
+
+  height = circle.radius;
+  width = 2 * circle.radius;
 
   Point offset;
   offset.y = circle.centre.y - height;
