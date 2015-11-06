@@ -88,11 +88,11 @@ tick()
 
       if (n < 2 || n > 3)
       {
-        BUFFER(y, x) = 0;
+        BUFFER(y, x) = false;
       }
       if (n == 3)
       {
-        BUFFER(y, x) = 1;
+        BUFFER(y, x) = true;
       }
 
       mvaddch(y, x, ALIVE(y, x) ? 'X' : ' ');
@@ -114,7 +114,7 @@ add_circle(int y, int x, int radius)
 
   for (i = 0; i < 360; i++)
   {
-    CELL(points[i].y, points[i].x) = 1;
+    CELL(points[i].y, points[i].x) = true;
   }
 
   free(points);
