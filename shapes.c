@@ -24,12 +24,14 @@ void
 draw_circle(Circle circle, char dot)
 {
   int i;
-  Point * points = malloc(sizeof(Point) * 360);
 
+  Point * points = malloc(sizeof(Point) * 360);
   get_points(circle, points);
 
   for(i = 0; i < 360; i++)
   {
     mvaddch(points[i].y, points[i].x, dot);
   }
+
+  free(points);
 }
