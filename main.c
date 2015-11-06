@@ -10,19 +10,23 @@
 
 static int * cells;
 static int * buffer;
+Point * cursor;
 
 int main();
 void init();
 void deinit();
 void initcurses();
 void tick();
-int neighbours(int y, int x);
 void add_circle(int y, int x, int radius);
+bool keyboard(char c);
+int neighbours(int y, int x);
 
 
 int
 main()
 {
+  char c;
+
   init();
 
   add_circle(1 * LINES / 4, 1 * COLS / 4, (2 * LINES > COLS ? COLS / 4 : LINES) / 4);
@@ -31,11 +35,13 @@ main()
   add_circle(1 * LINES / 4, 3 * COLS / 4, (2 * LINES > COLS ? COLS / 4 : LINES) / 4);
   add_circle(2 * LINES / 4, 2 * COLS / 4, (2 * LINES > COLS ? COLS / 4 : LINES) / 4);
 
+  tick();
+
   do
   {
-    tick();
+    c = getch();
   }
-  while (getch() == 10);
+  while (keyboard(c));
 
   deinit();
 
@@ -118,6 +124,13 @@ add_circle(int y, int x, int radius)
   }
 
   free(points);
+}
+
+bool
+keyboard(char c)
+{
+  tick();
+  return false;
 }
 
 int
