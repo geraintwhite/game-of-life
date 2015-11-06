@@ -1,55 +1,86 @@
-#include <ncurses.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
+#include <ncurses.h>
 
-#include "maths.h"
-#include "shapes.h"
+#include "gol.h"
 #include "shapes.c"
 
-#define DOT 46
 
-int
-main(int argc, char * argv[])
+static int * cells;
+
+int main();
+void init();
+void deinit();
+void initcurses();
+void tick();
+void add_circle(int y, int x, int radius);
+
+
+int main()
 {
-  int height, width, radius;
+  init();
 
+  add_circle(LINES / 2, COLS / 2, (2 * LINES > COLS ? COLS / 2 : LINES) / 2);
+
+  tick();
+  getch();
+
+  deinit();
+
+  return 0;
+}
+
+void init()
+{
+  initcurses();
+  cells = malloc(SIZE);
+}
+
+void initcurses()
+{
   initscr();
   curs_set(0);
   start_color();
   use_default_colors();
 
-//  raw();
-//  noecho();
-//  keypad(stdscr, TRUE);
+  raw();
+  noecho();
+  keypad(stdscr, TRUE);
+}
 
-  getmaxyx(stdscr, height, width);
+void deinit()
+{
+  free(cells);
+  endwin();
+}
 
-  printw("%d, %d", height, width);
+void tick()
+{
+  int y, x;
 
-  radius = (2 * height > width ? width / 2 : height) / 2;
-
-  Point centre;
-  centre.y = height / 2;
-  centre.x = width / 2;
-
-  Circle circle1;
-  circle1.radius = radius;
-  circle1.centre = centre;
-
-  Circle circle2;
-  circle2.radius = radius / 2;
-  circle2.centre = centre;
-
-  init_pair(1, COLOR_RED, COLOR_RED);
-  init_pair(2, COLOR_YELLOW, COLOR_YELLOW);
-
-  attron(COLOR_PAIR(1));
-  draw_circle(circle1, DOT);
-  attron(COLOR_PAIR(2));
-  draw_circle(circle2, DOT);
+  for (y = 0; y < LINES; y++) {
+    for (x = 0; x < COLS; x++) {
+      if (CELL(y, x)) {
+        mvaddch(y, x, 'X');
+      }
+    }
+  }
 
   refresh();
-  getch();
-  endwin();
+}
 
-  return 0;
+void add_circle(int y, int x, int radius)
+{
+  int i;
+
+  Point * points = malloc(sizeof(Point) * 360);
+  get_points((Circle) {radius, (Point) {y, x}}, points);
+
+  for(i = 0; i < 360; i++)
+  {
+    LIVE(points[i].y, points[i].x);
+  }
+
+  free(points);
 }
