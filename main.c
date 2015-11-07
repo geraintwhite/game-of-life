@@ -37,11 +37,7 @@ main()
 
   tick();
 
-  do
-  {
-    c = getch();
-  }
-  while (keyboard(c));
+  while (keyboard(getch())) {}
 
   deinit();
 
@@ -131,8 +127,15 @@ add_circle(int y, int x, int radius)
 bool
 keyboard(char c)
 {
-  tick();
-  return false;
+  switch (c) {
+    case 10:
+      tick();
+      break;
+    default:
+      return false;
+  }
+
+  return true;
 }
 
 int
