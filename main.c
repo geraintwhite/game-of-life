@@ -12,69 +12,44 @@ static int * cells;
 static int * buffer;
 Point * cursor;
 
-int main();
-void init();
-void deinit();
-void initcurses();
-void tick();
-void add_circle(int y, int x, int radius);
-bool keyboard(char c);
-int neighbours(int y, int x);
 
+void
+add_circle(int y, int x, int radius)
+{
+  int i;
+
+  Point * points = malloc(sizeof(Point) * 360);
+  get_points((Circle) {radius, (Point) {y, x}}, points);
+
+  for (i = 0; i < 360; i++)
+  {
+    CELL(points[i].y, points[i].x) = true;
+  }
+
+  free(points);
+}
 
 int
-main()
+neighbours(int y, int x)
 {
-  char c;
+  int dy, dx, n;
 
-  init();
+  for (dy = -1; dy <= 1; dy++)
+  {
+    for (dx = -1; dx <= 1; dx++)
+    {
+      if (!(dy == 0 && dx == 0) &&
+          y + dy >= 0 &&
+          x + dx >= 0 &&
+          y + dy < LINES &&
+          x + dx < COLS)
+      {
+        n += ALIVE(y + dy, x + dx);
+      }
+    }
+  }
 
-  add_circle(1 * LINES / 4, 1 * COLS / 4, (2 * LINES > COLS ? COLS / 4 : LINES) / 4);
-  add_circle(3 * LINES / 4, 1 * COLS / 4, (2 * LINES > COLS ? COLS / 4 : LINES) / 4);
-  add_circle(3 * LINES / 4, 3 * COLS / 4, (2 * LINES > COLS ? COLS / 4 : LINES) / 4);
-  add_circle(1 * LINES / 4, 3 * COLS / 4, (2 * LINES > COLS ? COLS / 4 : LINES) / 4);
-  add_circle(2 * LINES / 4, 2 * COLS / 4, (2 * LINES > COLS ? COLS / 4 : LINES) / 4);
-
-  tick();
-
-  while (keyboard(getch())) {}
-
-  deinit();
-
-  return 0;
-}
-
-void
-init()
-{
-  initcurses();
-
-  cells = malloc(SIZE);
-  buffer = malloc(SIZE);
-}
-
-void
-initcurses()
-{
-  initscr();
-  curs_set(0);
-  start_color();
-  use_default_colors();
-
-  init_pair(1, COLOR_BLACK, COLOR_BLUE);
-
-  raw();
-  noecho();
-  keypad(stdscr, TRUE);
-}
-
-void
-deinit()
-{
-  endwin();
-
-  free(cells);
-  free(buffer);
+  return n;
 }
 
 void
@@ -108,22 +83,6 @@ tick()
   refresh();
 }
 
-void
-add_circle(int y, int x, int radius)
-{
-  int i;
-
-  Point * points = malloc(sizeof(Point) * 360);
-  get_points((Circle) {radius, (Point) {y, x}}, points);
-
-  for (i = 0; i < 360; i++)
-  {
-    CELL(points[i].y, points[i].x) = true;
-  }
-
-  free(points);
-}
-
 bool
 keyboard(char c)
 {
@@ -138,25 +97,54 @@ keyboard(char c)
   return true;
 }
 
-int
-neighbours(int y, int x)
+void
+init_curses()
 {
-  int dy, dx, n;
+  initscr();
+  curs_set(0);
+  start_color();
+  use_default_colors();
 
-  for (dy = -1; dy <= 1; dy++)
-  {
-    for (dx = -1; dx <= 1; dx++)
-    {
-      if (!(dy == 0 && dx == 0) &&
-          y + dy >= 0 &&
-          x + dx >= 0 &&
-          y + dy < LINES &&
-          x + dx < COLS)
-      {
-        n += ALIVE(y + dy, x + dx);
-      }
-    }
-  }
+  init_pair(1, COLOR_BLACK, COLOR_BLUE);
 
-  return n;
+  raw();
+  noecho();
+  keypad(stdscr, TRUE);
+}
+
+void
+init_game()
+{
+  cells = malloc(SIZE);
+  buffer = malloc(SIZE);
+
+  add_circle(1 * LINES / 4, 1 * COLS / 4, (2 * LINES > COLS ? COLS / 4 : LINES) / 4);
+  add_circle(3 * LINES / 4, 1 * COLS / 4, (2 * LINES > COLS ? COLS / 4 : LINES) / 4);
+  add_circle(3 * LINES / 4, 3 * COLS / 4, (2 * LINES > COLS ? COLS / 4 : LINES) / 4);
+  add_circle(1 * LINES / 4, 3 * COLS / 4, (2 * LINES > COLS ? COLS / 4 : LINES) / 4);
+  add_circle(2 * LINES / 4, 2 * COLS / 4, (2 * LINES > COLS ? COLS / 4 : LINES) / 4);
+
+  tick();
+}
+
+void
+deinit()
+{
+  endwin();
+
+  free(cells);
+  free(buffer);
+}
+
+int
+main()
+{
+  init_curses();
+  init_game();
+
+  while (keyboard(getch()));
+
+  deinit();
+
+  return 0;
 }
