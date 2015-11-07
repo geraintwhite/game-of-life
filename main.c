@@ -65,6 +65,8 @@ initcurses()
   start_color();
   use_default_colors();
 
+  init_pair(1, COLOR_BLACK, COLOR_BLUE);
+
   raw();
   noecho();
   keypad(stdscr, TRUE);
@@ -101,7 +103,7 @@ tick()
         BUFFER(y, x) = true;
       }
 
-      mvaddch(y, x, ALIVE(y, x) ? 'X' : ' ');
+      mvaddch(y, x, ALIVE(y, x) ? ' ' | COLOR_PAIR(1) : ' ');
     }
   }
 
