@@ -8,6 +8,7 @@
 #include "gol.h"
 
 
+static int DOT = COLOR_PAIR(1) | ' ';
 static int * cells;
 static int * buffer;
 Point * cursor;
@@ -74,7 +75,7 @@ tick()
         BUFFER(y, x) = true;
       }
 
-      mvaddch(y, x, ALIVE(y, x) ? ' ' | COLOR_PAIR(1) : ' ');
+      mvaddch(y, x, ALIVE(y, x) ? DOT : ' ');
     }
   }
 
