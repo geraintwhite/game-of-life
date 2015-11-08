@@ -42,8 +42,8 @@ neighbours(int y, int x)
       if (!(dy == 0 && dx == 0) &&
           y + dy >= 0 &&
           x + dx >= 0 &&
-          y + dy < LINES &&
-          x + dx < COLS)
+          y + dy < HEIGHT &&
+          x + dx < WIDTH)
       {
         n += ALIVE(y + dy, x + dx);
       }
@@ -60,9 +60,9 @@ tick()
 
   memcpy(buffer, cells, SIZE);
 
-  for (y = 0; y < LINES; y++)
+  for (y = 0; y < HEIGHT; y++)
   {
-    for (x = 0; x < COLS; x++)
+    for (x = 0; x < WIDTH; x++)
     {
       n = neighbours(y, x);
 
@@ -119,11 +119,11 @@ init_game()
   cells = malloc(SIZE);
   buffer = malloc(SIZE);
 
-  add_circle(1 * LINES / 4, 1 * COLS / 4, (2 * LINES > COLS ? COLS / 4 : LINES) / 4);
-  add_circle(3 * LINES / 4, 1 * COLS / 4, (2 * LINES > COLS ? COLS / 4 : LINES) / 4);
-  add_circle(3 * LINES / 4, 3 * COLS / 4, (2 * LINES > COLS ? COLS / 4 : LINES) / 4);
-  add_circle(1 * LINES / 4, 3 * COLS / 4, (2 * LINES > COLS ? COLS / 4 : LINES) / 4);
-  add_circle(2 * LINES / 4, 2 * COLS / 4, (2 * LINES > COLS ? COLS / 4 : LINES) / 4);
+  add_circle(1 * HEIGHT / 4, 1 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
+  add_circle(3 * HEIGHT / 4, 1 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
+  add_circle(3 * HEIGHT / 4, 3 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
+  add_circle(1 * HEIGHT / 4, 3 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
+  add_circle(2 * HEIGHT / 4, 2 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
 
   tick();
 }
