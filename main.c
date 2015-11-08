@@ -102,6 +102,10 @@ keyboard(int c)
     case KEY_DOWN:
       if (y < HEIGHT-1) y++;
       break;
+    case ' ':
+      CELL(y, x) = !ALIVE(y, x);
+      mvaddch(y, x, ALIVE(y, x) ? DOT : ' ');
+      break;
     case 10:
       tick();
       break;
