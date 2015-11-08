@@ -11,7 +11,6 @@
 static int DOT = COLOR_PAIR(1) | ' ';
 static int * cells;
 static int * buffer;
-Point * cursor;
 
 
 void
@@ -85,15 +84,33 @@ tick()
 }
 
 bool
-keyboard(char c)
+keyboard(int c)
 {
+  int y, x;
+  getyx(stdscr, y, x);
+
   switch (c) {
+    case KEY_LEFT:
+      if (x > 0) x--;
+      break;
+    case KEY_RIGHT:
+      if (x < WIDTH-1) x++;
+      break;
+    case KEY_UP:
+      if (y > 0) y--;
+      break;
+    case KEY_DOWN:
+      if (y < HEIGHT-1) y++;
+      break;
     case 10:
       tick();
       break;
     default:
       return false;
   }
+
+  move(y, x);
+  refresh();
 
   return true;
 }
@@ -102,7 +119,6 @@ void
 init_curses()
 {
   initscr();
-  curs_set(0);
   start_color();
   use_default_colors();
 
@@ -126,6 +142,7 @@ init_game()
   add_circle(2 * HEIGHT / 4, 2 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
 
   tick();
+  move(0, 0);
 }
 
 void
