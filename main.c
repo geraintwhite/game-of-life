@@ -63,6 +63,7 @@ tick()
   {
     for (x = 0; x < WIDTH; x++)
     {
+      // set 'alive' state of each cell depending on the number of neighbours
       n = neighbours(y, x);
 
       if (n < 2 || n > 3)
@@ -103,6 +104,7 @@ keyboard(int c)
       if (y < HEIGHT-1) y++;
       break;
     case ' ':
+      // toggle currently selected cell 'alive' state
       CELL(y, x) = !ALIVE(y, x);
       mvaddch(y, x, ALIVE(y, x) ? DOT : ' ');
       break;
