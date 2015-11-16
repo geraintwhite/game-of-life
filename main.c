@@ -14,6 +14,13 @@ static int * buffer;
 
 
 void
+update_cell(int y, int x, bool alive)
+{
+  CELL(y, x) = alive;
+  mvaddch(y, x, alive ? DOT : ' ');
+}
+
+void
 add_circle(int y, int x, int radius)
 {
   int i;
@@ -23,7 +30,7 @@ add_circle(int y, int x, int radius)
 
   for (i = 0; i < 360; i++)
   {
-    CELL(points[i].y, points[i].x) = true;
+    update_cell(points[i].y, points[i].x, true);
   }
 
   free(points);
@@ -44,7 +51,7 @@ neighbours(int y, int x)
           y + dy < HEIGHT &&
           x + dx < WIDTH)
       {
-        n += ALIVE(y + dy, x + dx);
+        n += CELL(y + dy, x + dx);
       }
     }
   }
@@ -75,7 +82,7 @@ tick()
         BUFFER(y, x) = true;
       }
 
-      mvaddch(y, x, ALIVE(y, x) ? DOT : ' ');
+      mvaddch(y, x, BUFFER(y, x) ? DOT : ' ');
     }
   }
 
@@ -105,8 +112,7 @@ keyboard(int c)
       break;
     case ' ':
       // toggle currently selected cell 'alive' state
-      CELL(y, x) = !ALIVE(y, x);
-      mvaddch(y, x, ALIVE(y, x) ? DOT : ' ');
+      update_cell(y, x, !CELL(y, x));
       break;
     case 10:
       tick();
@@ -147,7 +153,6 @@ init_game()
   add_circle(1 * HEIGHT / 4, 3 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
   add_circle(2 * HEIGHT / 4, 2 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
 
-  tick();
   move(0, 0);
 }
 
