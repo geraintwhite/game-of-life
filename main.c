@@ -25,7 +25,7 @@ typedef struct
 {
   Cells buffers[N_BUFFERS];
   Cells tmp_buf;
-  int head;
+  Cells * head;
 } CellBuffers;
 
 static int DOT = COLOR_PAIR(1) | ' ';
@@ -84,15 +84,14 @@ tick(CellBuffers * cell_buffers)
 {
   int y, x, n;
 
-  Cells * head_buf = cell_buffers->buffers + cell_buffers->head;
-  memcpy(cell_buffers->tmp_buf.cells, head_buf->cells, cell_buffers->tmp_buf.size);
+  memcpy(cell_buffers->tmp_buf.cells, cell_buffers->head->cells, cell_buffers->tmp_buf.size);
 
   for (y = 0; y < HEIGHT; y++)
   {
     for (x = 0; x < WIDTH; x++)
     {
       // set 'alive' state of each cell depending on the number of neighbours
-      n = neighbours(head_buf, y, x);
+      n = neighbours(cell_buffers->head, y, x);
 
       Cell * current_cell = cell_buffers->tmp_buf.cells + COORD(y, x);
 
@@ -109,7 +108,7 @@ tick(CellBuffers * cell_buffers)
     }
   }
 
-  memcpy(head_buf->cells, cell_buffers->tmp_buf.cells, head_buf->size);
+  memcpy(cell_buffers->head->cells, cell_buffers->tmp_buf.cells, cell_buffers->head->size);
 
   refresh();
 }
@@ -119,8 +118,6 @@ keyboard(int c, CellBuffers * cell_buffers)
 {
   int y, x;
   getyx(stdscr, y, x);
-
-  Cells * head_buf = cell_buffers->buffers + cell_buffers->head;
 
   switch (c) {
     case KEY_LEFT:
@@ -142,8 +139,8 @@ keyboard(int c, CellBuffers * cell_buffers)
     case ' ':
     {
       // toggle currently selected cell 'alive' state
-      Cell * cursor_cell = head_buf->cells + COORD(y, x);
-      update_cell(head_buf, y, x, !(cursor_cell->state));
+      Cell * cursor_cell = cell_buffers->head->cells + COORD(y, x);
+      update_cell(cell_buffers->head, y, x, !(cursor_cell->state));
     } break;
     case 't':
     {
@@ -159,7 +156,7 @@ keyboard(int c, CellBuffers * cell_buffers)
     }
   }
 
-  if (draw_mode) update_cell(head_buf, y, x, true);
+  if (draw_mode) update_cell(cell_buffers->head, y, x, true);
 
   move(y, x);
   refresh();
@@ -203,13 +200,13 @@ init_game(CellBuffers * cell_buffers)
 
   new_cell_buffer(&(cell_buffers->tmp_buf), size);
 
-  cell_buffers->head = 0;
+  cell_buffers->head = cell_buffers->buffers;
 
-  add_circle(cell_buffers->buffers + cell_buffers->head, 1 * HEIGHT / 4, 1 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
-  add_circle(cell_buffers->buffers + cell_buffers->head, 3 * HEIGHT / 4, 1 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
-  add_circle(cell_buffers->buffers + cell_buffers->head, 3 * HEIGHT / 4, 3 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
-  add_circle(cell_buffers->buffers + cell_buffers->head, 1 * HEIGHT / 4, 3 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
-  add_circle(cell_buffers->buffers + cell_buffers->head, 2 * HEIGHT / 4, 2 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
+  add_circle(cell_buffers->head, 1 * HEIGHT / 4, 1 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
+  add_circle(cell_buffers->head, 3 * HEIGHT / 4, 1 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
+  add_circle(cell_buffers->head, 3 * HEIGHT / 4, 3 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
+  add_circle(cell_buffers->head, 1 * HEIGHT / 4, 3 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
+  add_circle(cell_buffers->head, 2 * HEIGHT / 4, 2 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
 
   move(0, 0);
 }
