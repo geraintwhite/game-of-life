@@ -33,11 +33,24 @@ static bool draw_mode = false;
 
 
 void
-update_cell(Cells * cells, int y, int x, bool alive)
+update_cell(Cells * cells, int y, int x, bool state)
 {
   Cell * cell = cells->cells + COORD(y, x);
-  cell->state = alive;
-  mvaddch(y, x, alive ? DOT : ' ');
+  cell->state = state;
+  mvaddch(y, x, state ? DOT : ' ');
+}
+
+void
+reset_cells(Cells * cells, bool state)
+{
+  int y, x;
+  for (y = 0; y < HEIGHT; y++)
+  {
+    for (x = 0; x < WIDTH; x++)
+    {
+      update_cell(cells, y, x, state);
+    }
+  }
 }
 
 void
@@ -145,6 +158,10 @@ keyboard(int c, CellBuffers * cell_buffers)
     case 't':
     {
       draw_mode = !draw_mode;
+    } break;
+    case 'c':
+    {
+      reset_cells(cells, false);
     } break;
     case 10:
     {
