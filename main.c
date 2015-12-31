@@ -32,6 +32,19 @@ update_cell(Cells * cells, int y, int x, bool alive)
 }
 
 void
+reset_cells(Cells * cells, bool state)
+{
+  int y, x;
+  for (y = 0; y < HEIGHT; y++)
+  {
+    for (x = 0; x < WIDTH; x++)
+    {
+      update_cell(cells, y, x, state);
+    }
+  }
+}
+
+void
 add_circle(Cells * cells, int y, int x, int radius)
 {
   int i;
@@ -110,7 +123,6 @@ keyboard(int c, Cells * cells, Cells * buffer)
   int y, x;
   getyx(stdscr, y, x);
 
-
   switch (c) {
     case KEY_LEFT:
     {
@@ -137,6 +149,10 @@ keyboard(int c, Cells * cells, Cells * buffer)
     case 't':
     {
       draw_mode = !draw_mode;
+    } break;
+    case 'c':
+    {
+      reset_cells(cells, false);
     } break;
     case 10:
     {
