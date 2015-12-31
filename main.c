@@ -20,6 +20,7 @@ typedef struct
 } Cells;
 
 static int DOT = COLOR_PAIR(1) | ' ';
+static bool draw_mode = false;
 
 
 void
@@ -133,6 +134,10 @@ keyboard(int c, Cells * cells, Cells * buffer)
       Cell * cursor_cell = cells->cells + COORD(y, x);
       update_cell(cells, y, x, !(cursor_cell->state));
     } break;
+    case 't':
+    {
+      draw_mode = !draw_mode;
+    } break;
     case 10:
     {
       tick(cells, buffer);
@@ -142,6 +147,8 @@ keyboard(int c, Cells * cells, Cells * buffer)
       return false;
     }
   }
+
+  if (draw_mode) update_cell(cells, y, x, true);
 
   move(y, x);
   refresh();
