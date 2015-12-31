@@ -1,5 +1,5 @@
 CC         = gcc
-CFLAGS     = -g
+CFLAGS     = -g -Werror
 LIBS       = -lm -lncurses
 SOURCES    = main.c
 EXECUTABLE = game-of-life
