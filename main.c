@@ -161,7 +161,7 @@ keyboard(int c, CellBuffers * cell_buffers)
     } break;
     case 'c':
     {
-      reset_cells(cells, false);
+      reset_cells(cell_buffers->head, false);
     } break;
     case 10:
     {
