@@ -11,6 +11,7 @@
 static int DOT = COLOR_PAIR(1) | ' ';
 static int * cells;
 static int * buffer;
+static bool draw_mode = false;
 
 
 void
@@ -114,12 +115,17 @@ keyboard(int c)
       // toggle currently selected cell 'alive' state
       update_cell(y, x, !CELL(y, x));
       break;
+    case 't':
+      draw_mode = !draw_mode;
+      break;
     case 10:
       tick();
       break;
     default:
       return false;
   }
+
+  if (draw_mode) update_cell(y, x, true);
 
   move(y, x);
   refresh();
