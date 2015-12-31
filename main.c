@@ -24,11 +24,11 @@ static bool draw_mode = false;
 
 
 void
-update_cell(Cells * cells, int y, int x, bool alive)
+update_cell(Cells * cells, int y, int x, bool state)
 {
   Cell * cell = cells->cells + COORD(y, x);
-  cell->state = alive;
-  mvaddch(y, x, alive ? DOT : ' ');
+  cell->state = state;
+  mvaddch(y, x, state ? DOT : ' ');
 }
 
 void
