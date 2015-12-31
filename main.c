@@ -17,12 +17,12 @@ typedef struct
 
 typedef struct
 {
-  int size;
   Cell * cells;
 } Cells;
 
 typedef struct
 {
+  int buffer_size;
   Cells buffers[N_BUFFERS];
   Cells tmp_buf;
   Cells * head;
@@ -84,7 +84,7 @@ tick(CellBuffers * cell_buffers)
 {
   int y, x, n;
 
-  memcpy(cell_buffers->tmp_buf.cells, cell_buffers->head->cells, cell_buffers->tmp_buf.size);
+  memcpy(cell_buffers->tmp_buf.cells, cell_buffers->head->cells, cell_buffers->buffer_size);
 
   for (y = 0; y < HEIGHT; y++)
   {
@@ -108,7 +108,7 @@ tick(CellBuffers * cell_buffers)
     }
   }
 
-  memcpy(cell_buffers->head->cells, cell_buffers->tmp_buf.cells, cell_buffers->head->size);
+  memcpy(cell_buffers->head->cells, cell_buffers->tmp_buf.cells, cell_buffers->buffer_size);
 
   refresh();
 }
@@ -181,24 +181,23 @@ init_curses()
 void
 new_cell_buffer(Cells * cells, int size)
 {
-  cells->size = size;
-  cells->cells = malloc(cells->size);
+  cells->cells = malloc(size);
 }
 
 void
 init_game(CellBuffers * cell_buffers)
 {
-  int size = WIDTH * HEIGHT * sizeof(int);
+  cell_buffers->buffer_size = WIDTH * HEIGHT * sizeof(int);
 
   int buf_index;
   for (buf_index = 0;
        buf_index < N_BUFFERS;
        ++buf_index)
   {
-    new_cell_buffer((cell_buffers->buffers + buf_index), size);
+    new_cell_buffer((cell_buffers->buffers + buf_index), cell_buffers->buffer_size);
   }
 
-  new_cell_buffer(&(cell_buffers->tmp_buf), size);
+  new_cell_buffer(&(cell_buffers->tmp_buf), cell_buffers->buffer_size);
 
   cell_buffers->head = cell_buffers->buffers;
 
