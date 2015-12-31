@@ -159,6 +159,11 @@ keyboard(int c, CellBuffers * cell_buffers)
     {
       draw_mode = !draw_mode;
     } break;
+    case 's':
+    {
+      memcpy((cell_buffers->head+1)->cells, cell_buffers->head->cells, cell_buffers->buffer_size);
+      cell_buffers->head++;
+    } break;
     case 'c':
     {
       reset_cells(cell_buffers->head, false);
@@ -170,7 +175,7 @@ keyboard(int c, CellBuffers * cell_buffers)
     case 'q':
     {
       return false;
-    }
+    } break;
   }
 
   if (draw_mode) update_cell(cell_buffers->head, y, x, true);
