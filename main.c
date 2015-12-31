@@ -167,7 +167,7 @@ keyboard(int c, CellBuffers * cell_buffers)
     {
       tick(cell_buffers);
     } break;
-    default:
+    case 'q':
     {
       return false;
     }
