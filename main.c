@@ -8,38 +8,47 @@
 #include "gol.h"
 
 
+typedef struct
+{
+  bool state;
+} Cell;
+
+typedef struct
+{
+  int size;
+  Cell * cells;
+} Cells;
+
 static int DOT = COLOR_PAIR(1) | ' ';
-static int * cells;
-static int * buffer;
 
 
 void
-update_cell(int y, int x, bool alive)
+update_cell(Cells * cells, int y, int x, bool alive)
 {
-  CELL(y, x) = alive;
+  Cell * cell = cells->cells + COORD(y, x);
+  cell->state = alive;
   mvaddch(y, x, alive ? DOT : ' ');
 }
 
 void
-add_circle(int y, int x, int radius)
+add_circle(Cells * cells, int y, int x, int radius)
 {
   int i;
 
-  Point * points = malloc(sizeof(Point) * 360);
+  Point points[360];
   get_points((Circle) {radius, (Point) {y, x}}, points);
 
   for (i = 0; i < 360; i++)
   {
-    update_cell(points[i].y, points[i].x, true);
+    update_cell(cells, points[i].y, points[i].x, true);
   }
-
-  free(points);
 }
 
 int
-neighbours(int y, int x)
+neighbours(Cells * cells, int y, int x)
 {
-  int dy, dx, n;
+  int dy, dx;
+  int n = 0;
 
   for (dy = -1; dy <= 1; dy++)
   {
@@ -51,7 +60,8 @@ neighbours(int y, int x)
           y + dy < HEIGHT &&
           x + dx < WIDTH)
       {
-        n += CELL(y + dy, x + dx);
+        Cell * current_cell = cells->cells + COORD(y + dy, x + dx);
+        n += current_cell->state;
       }
     }
   }
@@ -60,65 +70,77 @@ neighbours(int y, int x)
 }
 
 void
-tick()
+tick(Cells * cells, Cells * buffer)
 {
   int y, x, n;
 
-  memcpy(buffer, cells, SIZE);
+  memcpy(buffer->cells, cells->cells, cells->size);
 
   for (y = 0; y < HEIGHT; y++)
   {
     for (x = 0; x < WIDTH; x++)
     {
       // set 'alive' state of each cell depending on the number of neighbours
-      n = neighbours(y, x);
+      n = neighbours(cells, y, x);
+
+      Cell * current_cell = buffer->cells + COORD(y, x);
 
       if (n < 2 || n > 3)
       {
-        BUFFER(y, x) = false;
+        current_cell->state = false;
       }
       if (n == 3)
       {
-        BUFFER(y, x) = true;
+        current_cell->state = true;
       }
 
-      mvaddch(y, x, BUFFER(y, x) ? DOT : ' ');
+      mvaddch(y, x, current_cell->state ? DOT : ' ');
     }
   }
 
-  memcpy(cells, buffer, SIZE);
+  memcpy(cells->cells, buffer->cells, cells->size);
 
   refresh();
 }
 
 bool
-keyboard(int c)
+keyboard(int c, Cells * cells, Cells * buffer)
 {
   int y, x;
   getyx(stdscr, y, x);
 
+
   switch (c) {
     case KEY_LEFT:
+    {
       if (x > 0) x--;
-      break;
+    } break;
     case KEY_RIGHT:
+    {
       if (x < WIDTH-1) x++;
-      break;
+    } break;
     case KEY_UP:
+    {
       if (y > 0) y--;
-      break;
+    } break;
     case KEY_DOWN:
+    {
       if (y < HEIGHT-1) y++;
-      break;
+    } break;
     case ' ':
+    {
       // toggle currently selected cell 'alive' state
-      update_cell(y, x, !CELL(y, x));
-      break;
+      Cell * cursor_cell = cells->cells + COORD(y, x);
+      update_cell(cells, y, x, !(cursor_cell->state));
+    } break;
     case 10:
-      tick();
-      break;
+    {
+      tick(cells, buffer);
+    } break;
     default:
+    {
       return false;
+    }
   }
 
   move(y, x);
@@ -142,38 +164,46 @@ init_curses()
 }
 
 void
-init_game()
+init_game(Cells * cells, Cells * buffer)
 {
-  cells = malloc(SIZE);
-  buffer = malloc(SIZE);
+  int size = WIDTH * HEIGHT * sizeof(int);
 
-  add_circle(1 * HEIGHT / 4, 1 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
-  add_circle(3 * HEIGHT / 4, 1 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
-  add_circle(3 * HEIGHT / 4, 3 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
-  add_circle(1 * HEIGHT / 4, 3 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
-  add_circle(2 * HEIGHT / 4, 2 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
+  cells->size = size;
+  cells->cells = malloc(cells->size);
+
+  buffer->size = size;
+  buffer->cells = malloc(buffer->size);
+
+  add_circle(cells, 1 * HEIGHT / 4, 1 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
+  add_circle(cells, 3 * HEIGHT / 4, 1 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
+  add_circle(cells, 3 * HEIGHT / 4, 3 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
+  add_circle(cells, 1 * HEIGHT / 4, 3 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
+  add_circle(cells, 2 * HEIGHT / 4, 2 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
 
   move(0, 0);
 }
 
 void
-deinit()
+deinit(Cells * cells, Cells * buffer)
 {
   endwin();
 
-  free(cells);
-  free(buffer);
+  free(cells->cells);
+  free(buffer->cells);
 }
 
 int
 main()
 {
   init_curses();
-  init_game();
 
-  while (keyboard(getch()));
+  Cells cells;
+  Cells buffer;
+  init_game(&cells, &buffer);
 
-  deinit();
+  while (keyboard(getch(), &cells, &buffer));
+
+  deinit(&cells, &buffer);
 
   return 0;
 }
