@@ -10,8 +10,8 @@
 #define HEIGHT (LINES)
 #define WIDTH (COLS)
 
-#define WIN_HEIGHT (10)
-#define WIN_WIDTH (10)
+#define WIN_HEIGHT (HEIGHT)
+#define WIN_WIDTH (25)
 #define WIN_STARTX (WIDTH - WIN_WIDTH)
 #define WIN_STARTY (0)
 
@@ -127,10 +127,20 @@ draw_buffer(Cells * cells)
 void
 update_stats(State * state)
 {
-  mvprintw(WIN_STARTY + 0, WIN_STARTX + 0, "STATE");
-  mvprintw(WIN_STARTY + 2, WIN_STARTX + 0, "TRACE %d", state->trace);
-  mvprintw(WIN_STARTY + 3, WIN_STARTX + 0, "LINE %d", state->line);
-  mvprintw(WIN_STARTY + 4, WIN_STARTX + 0, "CIRCLE %d", state->circle);
+  mvprintw(WIN_STARTY + 0, WIN_STARTX, "STATE");
+  mvprintw(WIN_STARTY + 2, WIN_STARTX, "trace %d", state->trace);
+  mvprintw(WIN_STARTY + 3, WIN_STARTX, "line %d", state->line);
+  mvprintw(WIN_STARTY + 4, WIN_STARTX, "circle %d", state->circle);
+  mvprintw(WIN_STARTY + 7, WIN_STARTX, "HELP");
+  mvprintw(WIN_STARTY + 9, WIN_STARTX, "trace (t)");
+  mvprintw(WIN_STARTY + 10, WIN_STARTX, "circle (o)");
+  mvprintw(WIN_STARTY + 11, WIN_STARTX, "line (l)");
+  mvprintw(WIN_STARTY + 12, WIN_STARTX, "clear (c)");
+  mvprintw(WIN_STARTY + 13, WIN_STARTX, "save to buffer (s)");
+  mvprintw(WIN_STARTY + 14, WIN_STARTX, "load from buffer (0-9)");
+  mvprintw(WIN_STARTY + 15, WIN_STARTX, "next frame (enter)");
+  mvprintw(WIN_STARTY + 16, WIN_STARTX, "quit (q)");
+  mvprintw(WIN_STARTY + 17, WIN_STARTX, "toggle sidebar (?)");
 }
 
 void
