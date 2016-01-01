@@ -10,9 +10,14 @@
 #define HEIGHT (LINES)
 #define WIDTH (COLS)
 
+#define WIN_HEIGHT (10)
+#define WIN_WIDTH (10)
+#define WIN_STARTX (WIDTH - WIN_WIDTH)
+#define WIN_STARTY (0)
+
 #define COORD(y, x) ((y) * WIDTH + (x))
 
-#define N_BUFFERS 10
+#define N_BUFFERS (10)
 
 
 typedef struct
@@ -35,6 +40,7 @@ typedef struct
 
 typedef struct
 {
+  bool stats;
   bool line;
   bool trace;
   int line_sy;
@@ -75,6 +81,27 @@ draw_buffer(Cells * cells)
     {
       Cell * cell = cells->cells + COORD(y, x);
       mvaddch(y, x, cell->state ? DOT : ' ');
+    }
+  }
+}
+
+void
+update_stats(State * state)
+{
+  mvprintw(WIN_STARTY + 0, WIN_STARTX + 0, "STATE");
+  mvprintw(WIN_STARTY + 2, WIN_STARTX + 0, "LINE %d", state->line);
+  mvprintw(WIN_STARTY + 3, WIN_STARTX + 0, "TRACE %d", state->trace);
+}
+
+void
+clear_stats()
+{
+  int y, x;
+  for (y = 0; y < WIN_HEIGHT; y++)
+  {
+    for (x = 0; x < WIN_WIDTH; x++)
+    {
+      mvaddch(WIN_STARTY + y, WIN_STARTX + x, ' ');
     }
   }
 }
@@ -209,17 +236,10 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
     } break;
     case 'l':
     {
-      if (state->line)
-      {
-        add_line(cell_buffers->head, state->line_sy, state->line_sx, y, x);
-        state->line = false;
-      }
-      else
-      {
-        state->line_sy = y;
-        state->line_sx = x;
-        state->line = true;
-      }
+      if (state->line) add_line(cell_buffers->head, state->line_sy, state->line_sx, y, x);
+      state->line_sy = y;
+      state->line_sx = x;
+      state->line = !state->line;
     } break;
     case 'c':
     {
@@ -233,6 +253,11 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
     {
       return false;
     } break;
+    case '?':
+    {
+      state->stats = !state->stats;
+      clear_stats();
+    } break;
     default:
     {
       if ('0' <= c && c <= '9')
@@ -244,6 +269,7 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
   }
 
   if (state->trace) update_cell(cell_buffers->head, y, x, true);
+  if (state->stats) update_stats(state);
 
   move(y, x);
   refresh();
@@ -274,6 +300,7 @@ new_cell_buffer(Cells * cells, int size)
 void
 init_game(State * state, CellBuffers * cell_buffers)
 {
+  state->stats = true;
   state->line = false;
   state->trace = false;
 
@@ -297,6 +324,8 @@ init_game(State * state, CellBuffers * cell_buffers)
   add_circle(cell_buffers->head, 1 * HEIGHT / 4, 3 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
   add_circle(cell_buffers->head, 2 * HEIGHT / 4, 2 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
 
+  update_stats(state);
+
   move(0, 0);
 }
 
@@ -318,10 +347,10 @@ deinit(CellBuffers * cell_buffers)
 int
 main()
 {
-  init_curses();
-
   CellBuffers cell_buffers;
   State state;
+
+  init_curses();
   init_game(&state, &cell_buffers);
 
   while (keyboard(&state, &cell_buffers, getch()));
