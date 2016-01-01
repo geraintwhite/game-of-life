@@ -74,17 +74,39 @@ reset_cells(Cells * cells, bool state)
 }
 
 void
-draw_buffer(Cells * cells)
+draw_buffer_range(Cells * cells, int sy, int sx, int ey, int ex)
 {
-  int y, x;
-  for (y = 0; y < HEIGHT; y++)
+  ey += SIGN(ey - sy);
+  ex += SIGN(ex - sx);
+
+  if (sy > ey)
   {
-    for (x = 0; x < WIDTH; x++)
+    int tmp = sy;
+    sy = ey;
+    ey = tmp;
+  }
+  if (sx > ex)
+  {
+    int tmp = sx;
+    sx = ex;
+    ex = tmp;
+  }
+
+  int y, x;
+  for (y = sy; y <= ey; y++)
+  {
+    for (x = sx; x <= ex; x++)
     {
       Cell * cell = cells->cells + COORD(y, x);
       mvaddch(y, x, cell->state ? DOT : ' ');
     }
   }
+}
+
+void
+draw_buffer(Cells * cells)
+{
+  draw_buffer_range(cells, 0, 0, HEIGHT, WIDTH);
 }
 
 void
