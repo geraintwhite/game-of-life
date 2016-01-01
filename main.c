@@ -51,8 +51,11 @@ update_cell(Cells * cells, int y, int x, bool state)
       y < HEIGHT &&
       x < WIDTH)
   {
-    Cell * cell = cells->cells + COORD(y, x);
-    cell->state = state;
+    if (cells != NULL)
+    {
+      Cell * cell = cells->cells + COORD(y, x);
+      cell->state = state;
+    }
     mvaddch(y, x, state ? DOT : ' ');
   }
 }
