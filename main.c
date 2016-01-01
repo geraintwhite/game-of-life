@@ -45,9 +45,15 @@ static bool draw_mode = false;
 void
 update_cell(Cells * cells, int y, int x, bool state)
 {
-  Cell * cell = cells->cells + COORD(y, x);
-  cell->state = state;
-  mvaddch(y, x, state ? DOT : ' ');
+  if (y >= 0 &&
+      x >= 0 &&
+      y < HEIGHT &&
+      x < WIDTH)
+  {
+    Cell * cell = cells->cells + COORD(y, x);
+    cell->state = state;
+    mvaddch(y, x, state ? DOT : ' ');
+  }
 }
 
 void
