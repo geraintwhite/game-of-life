@@ -145,19 +145,6 @@ update_stats(State * state)
 }
 
 void
-clear_stats()
-{
-  int y, x;
-  for (y = 0; y < WIN_HEIGHT; y++)
-  {
-    for (x = 0; x < WIN_WIDTH; x++)
-    {
-      mvaddch(WIN_STARTY + y, WIN_STARTX + x, ' ');
-    }
-  }
-}
-
-void
 add_circle(Cells * cells, int y, int x, int radius, int chr)
 {
   int i;
@@ -332,7 +319,7 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
     case '?':
     {
       state->stats = !state->stats;
-      clear_stats();
+      draw_buffer_range(&(cell_buffers->head), WIN_STARTY, WIN_STARTX, WIN_STARTY + HEIGHT, WIN_STARTX + WIDTH);
     } break;
     default:
     {
