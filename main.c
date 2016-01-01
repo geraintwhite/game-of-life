@@ -33,6 +33,9 @@ typedef struct
   bool line;
   int line_sy;
   int line_sx;
+  bool circle;
+  int circle_y;
+  int circle_x;
 } State;
 
 static int DOT = COLOR_PAIR(1) | ' ';
@@ -216,6 +219,21 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
         state->line = true;
       }
     } break;
+    case 'o':
+    {
+      if (state->circle)
+      {
+        int radius = sqrt(pow(y - state->circle_y, 2) + pow((x - state->circle_x) / 2, 2));
+        add_circle(cell_buffers->head, state->circle_y, state->circle_x, radius);
+        state->circle = false;
+      }
+      else
+      {
+        state->circle_y = y;
+        state->circle_x = x;
+        state->circle = true;
+      }
+    } break;
     case 'c':
     {
       reset_cells(cell_buffers->head, false);
@@ -270,6 +288,7 @@ void
 init_game(State * state, CellBuffers * cell_buffers)
 {
   state->line = false;
+  state->circle = false;
 
   cell_buffers->buffer_size = WIDTH * HEIGHT * sizeof(int);
 
