@@ -34,9 +34,13 @@ typedef struct
   bool line;
   int line_sy;
   int line_sx;
+  int line_ey;
+  int line_ex;
+
   bool circle;
   int circle_y;
   int circle_x;
+  int circle_r;
 } State;
 
 static int DOT = COLOR_PAIR(1) | ' ';
@@ -242,13 +246,15 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
     {
       if (state->line)
       {
-        add_line(&(cell_buffers->head), state->line_sy, state->line_sx, y, x);
+        add_line(&(cell_buffers->head), state->line_sy, state->line_sx, state->line_ey, state->line_ex);
         state->line = false;
       }
       else
       {
         state->line_sy = y;
         state->line_sx = x;
+        state->line_ey = y;
+        state->line_ex = x;
         state->line = true;
       }
     } break;
@@ -256,14 +262,14 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
     {
       if (state->circle)
       {
-        int radius = sqrt(pow(y - state->circle_y, 2) + pow((x - state->circle_x) / 2, 2));
-        add_circle(&(cell_buffers->head), state->circle_y, state->circle_x, radius);
+        add_circle(&(cell_buffers->head), state->circle_y, state->circle_x, state->circle_r);
         state->circle = false;
       }
       else
       {
         state->circle_y = y;
         state->circle_x = x;
+        state->circle_r = 0;
         state->circle = true;
       }
     } break;
@@ -290,6 +296,25 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
   }
 
   if (draw_mode) update_cell(&(cell_buffers->head), y, x, true);
+
+  if (state->line)
+  {
+    draw_buffer_range(&(cell_buffers->head), state->line_sy, state->line_sx, state->line_ey, state->line_ex);
+    state->line_ey = y;
+    state->line_ex = x;
+    add_line(NULL, state->line_sy, state->line_sx, state->line_ey, state->line_ex);
+  }
+
+  if (state->circle)
+  {
+    draw_buffer_range(&(cell_buffers->head),
+                      state->circle_y - state->circle_r,
+                      state->circle_x - 2 * state->circle_r,
+                      state->circle_y + state->circle_r,
+                      state->circle_x + 2 * state->circle_r);
+    state->circle_r = sqrt(pow(y - state->circle_y, 2) + pow((x - state->circle_x) / 2, 2));
+    add_circle(NULL, state->circle_y, state->circle_x, state->circle_r);
+  }
 
   move(y, x);
   refresh();
