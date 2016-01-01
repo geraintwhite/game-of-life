@@ -67,6 +67,23 @@ add_circle(Cells * cells, int y, int x, int radius)
   }
 }
 
+void
+add_line(Cells * cells, int sy, int sx, int ey, int ex)
+{
+  int w = ex - sx;
+  int h = ey - sy;
+
+  int len = sqrt(w*w + h*h);
+
+  int i;
+  for (i = 0; i < len; i++)
+  {
+    int dy = (float)(h * i) / len;
+    int dx = (float)(w * i) / len;
+    update_cell(cells, sy + dy, sx + dx, true);
+  }
+}
+
 int
 neighbours(Cells * cells, int y, int x)
 {
