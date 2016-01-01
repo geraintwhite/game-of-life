@@ -16,7 +16,6 @@
 #define WIN_STARTY (0)
 
 #define COORD(y, x) ((y) * WIDTH + (x))
-#define SIGN(x) ((x) > 0 ? +1 : -1)
 
 #define N_BUFFERS (10)
 
