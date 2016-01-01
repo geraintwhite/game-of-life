@@ -42,8 +42,9 @@ typedef struct
 typedef struct
 {
   bool stats;
-  bool line;
   bool trace;
+
+  bool line;
   int line_sy;
   int line_sx;
   int line_ey;
@@ -356,7 +357,6 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
     state->line_ex = x;
     add_line(NULL, state->line_sy, state->line_sx, state->line_ey, state->line_ex, GUIDE, 1);
   }
-
   if (state->circle)
   {
     state->circle_r = sqrt(pow(y - state->circle_y, 2) + pow((x - state->circle_x) / 2, 2));
