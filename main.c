@@ -31,12 +31,12 @@ typedef struct
 typedef struct
 {
   bool line;
+  bool trace;
   int line_sy;
   int line_sx;
 } State;
 
 static int DOT = COLOR_PAIR(1) | ' ';
-static bool draw_mode = false;
 
 
 void
@@ -195,7 +195,7 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
     } break;
     case 't':
     {
-      draw_mode = !draw_mode;
+      state->trace = !state->trace;
     } break;
     case 's':
     {
@@ -238,7 +238,7 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
     }
   }
 
-  if (draw_mode) update_cell(cell_buffers->head, y, x, true);
+  if (state->trace) update_cell(cell_buffers->head, y, x, true);
 
   move(y, x);
   refresh();
@@ -270,6 +270,7 @@ void
 init_game(State * state, CellBuffers * cell_buffers)
 {
   state->line = false;
+  state->trace = false;
 
   cell_buffers->buffer_size = WIDTH * HEIGHT * sizeof(int);
 
