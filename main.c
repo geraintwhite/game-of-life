@@ -30,6 +30,9 @@ typedef struct
 
 typedef struct
 {
+  bool line;
+  int line_sy;
+  int line_sx;
 } State;
 
 static int DOT = COLOR_PAIR(1) | ' ';
@@ -199,6 +202,20 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
       memcpy((cell_buffers->head+1)->cells, cell_buffers->head->cells, cell_buffers->buffer_size);
       cell_buffers->head++;
     } break;
+    case 'l':
+    {
+      if (state->line)
+      {
+        add_line(cell_buffers->head, state->line_sy, state->line_sx, y, x);
+        state->line = false;
+      }
+      else
+      {
+        state->line_sy = y;
+        state->line_sx = x;
+        state->line = true;
+      }
+    } break;
     case 'c':
     {
       reset_cells(cell_buffers->head, false);
@@ -252,6 +269,8 @@ new_cell_buffer(Cells * cells, int size)
 void
 init_game(State * state, CellBuffers * cell_buffers)
 {
+  state->line = false;
+
   cell_buffers->buffer_size = WIDTH * HEIGHT * sizeof(int);
 
   int buf_index;
