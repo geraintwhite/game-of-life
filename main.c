@@ -5,7 +5,12 @@
 #include <ncurses.h>
 
 #include "shapes.c"
-#include "gol.h"
+
+
+#define HEIGHT (LINES)
+#define WIDTH (COLS)
+
+#define COORD(y, x) ((y) * WIDTH + (x))
 
 #define N_BUFFERS 10
 
