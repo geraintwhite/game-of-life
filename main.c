@@ -10,8 +10,8 @@
 #define HEIGHT (LINES)
 #define WIDTH (COLS)
 
-#define WIN_HEIGHT (10)
-#define WIN_WIDTH (10)
+#define WIN_HEIGHT (HEIGHT)
+#define WIN_WIDTH (25)
 #define WIN_STARTX (WIDTH - WIN_WIDTH)
 #define WIN_STARTY (0)
 
@@ -56,10 +56,11 @@ typedef struct
 } State;
 
 static int DOT = COLOR_PAIR(1) | ' ';
+static int GUIDE = COLOR_PAIR(2) | ' ';
 
 
 void
-update_cell(Cells * cells, int y, int x, int state)
+update_cell(Cells * cells, int y, int x, int state, int chr)
 {
   if (y >= 0 &&
       x >= 0 &&
@@ -78,7 +79,7 @@ update_cell(Cells * cells, int y, int x, int state)
         cell->state = state;
       }
     }
-    mvaddch(y, x, state ? DOT : ' ');
+    mvaddch(y, x, state ? chr : ' ');
   }
 }
 
@@ -90,7 +91,7 @@ reset_cells(Cells * cells, int state)
   {
     for (x = 0; x < WIDTH; x++)
     {
-      update_cell(cells, y, x, state);
+      update_cell(cells, y, x, state, DOT);
     }
   }
 }
@@ -132,17 +133,26 @@ draw_buffer(Cells * cells)
 }
 
 void
-update_stats(State * state, int next_buf)
+update_stats(State * state)
 {
-  mvprintw(WIN_STARTY + 0, WIN_STARTX + 0, "STATS");
-  mvprintw(WIN_STARTY + 2, WIN_STARTX + 0, "TRACE %d", state->trace);
-  mvprintw(WIN_STARTY + 3, WIN_STARTX + 0, "LINE %d", state->line);
-  mvprintw(WIN_STARTY + 4, WIN_STARTX + 0, "CIRCLE %d", state->circle);
-  mvprintw(WIN_STARTY + 5, WIN_STARTX + 0, "BUFFER %2d", next_buf);
+  mvprintw(WIN_STARTY + 0, WIN_STARTX, "STATE");
+  mvprintw(WIN_STARTY + 2, WIN_STARTX, "trace %d", state->trace);
+  mvprintw(WIN_STARTY + 3, WIN_STARTX, "line %d", state->line);
+  mvprintw(WIN_STARTY + 4, WIN_STARTX, "circle %d", state->circle);
+  mvprintw(WIN_STARTY + 7, WIN_STARTX, "HELP");
+  mvprintw(WIN_STARTY + 9, WIN_STARTX, "trace (t)");
+  mvprintw(WIN_STARTY + 10, WIN_STARTX, "circle (o)");
+  mvprintw(WIN_STARTY + 11, WIN_STARTX, "line (l)");
+  mvprintw(WIN_STARTY + 12, WIN_STARTX, "clear (c)");
+  mvprintw(WIN_STARTY + 13, WIN_STARTX, "save to buffer (s)");
+  mvprintw(WIN_STARTY + 14, WIN_STARTX, "load from buffer (0-9)");
+  mvprintw(WIN_STARTY + 15, WIN_STARTX, "next frame (enter)");
+  mvprintw(WIN_STARTY + 16, WIN_STARTX, "quit (q)");
+  mvprintw(WIN_STARTY + 17, WIN_STARTX, "toggle sidebar (?)");
 }
 
 void
-add_circle(Cells * cells, int y, int x, int radius, int state)
+add_circle(Cells * cells, int y, int x, int radius, int chr, int state)
 {
   int i;
 
@@ -151,12 +161,12 @@ add_circle(Cells * cells, int y, int x, int radius, int state)
 
   for (i = 0; i < 360; i++)
   {
-    update_cell(cells, points[i].y, points[i].x, state);
+    update_cell(cells, points[i].y, points[i].x, state, chr);
   }
 }
 
 void
-add_line(Cells * cells, int sy, int sx, int ey, int ex, int state)
+add_line(Cells * cells, int sy, int sx, int ey, int ex, int chr, int state)
 {
   int w = ex - sx;
   int h = ey - sy;
@@ -170,7 +180,7 @@ add_line(Cells * cells, int sy, int sx, int ey, int ex, int state)
   {
     int dy = (float)(h * i) / len;
     int dx = (float)(w * i) / len;
-    update_cell(cells, sy + dy, sx + dx, state);
+    update_cell(cells, sy + dy, sx + dx, state, chr);
   }
 }
 
@@ -260,7 +270,7 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
     {
       // toggle currently selected cell 'alive' state
       Cell * cursor_cell = cell_buffers->head.cells + COORD(y, x);
-      update_cell(&(cell_buffers->head), y, x, !(cursor_cell->state));
+      update_cell(&(cell_buffers->head), y, x, !(cursor_cell->state), DOT);
     } break;
     case 't':
     {
@@ -274,7 +284,7 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
     {
       if (state->line)
       {
-        add_line(&(cell_buffers->head), state->line_sy, state->line_sx, state->line_ey, state->line_ex, 1);
+        add_line(&(cell_buffers->head), state->line_sy, state->line_sx, state->line_ey, state->line_ex, DOT, 1);
         state->line = false;
       }
       else
@@ -290,7 +300,7 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
     {
       if (state->circle)
       {
-        add_circle(&(cell_buffers->head), state->circle_y, state->circle_x, state->circle_r, 1);
+        add_circle(&(cell_buffers->head), state->circle_y, state->circle_x, state->circle_r, DOT, 1);
         state->circle = false;
       }
       else
@@ -328,22 +338,22 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
     }
   }
 
-  if (state->trace) update_cell(&(cell_buffers->head), y, x, true);
-  if (state->stats) update_stats(state, cell_buffers->next_buff);
+  if (state->trace) update_cell(&(cell_buffers->head), y, x, true, DOT);
+  if (state->stats) update_stats(state);
 
   if (state->line)
   {
-    add_line(&(cell_buffers->head), state->line_sy, state->line_sx, state->line_ey, state->line_ex, 2);
+    add_line(&(cell_buffers->head), state->line_sy, state->line_sx, state->line_ey, state->line_ex, DOT, 2);
     state->line_ey = y;
     state->line_ex = x;
-    add_line(NULL, state->line_sy, state->line_sx, state->line_ey, state->line_ex, 1);
+    add_line(NULL, state->line_sy, state->line_sx, state->line_ey, state->line_ex, GUIDE, 1);
   }
 
   if (state->circle)
   {
-    add_circle(&(cell_buffers->head), state->circle_y, state->circle_x, state->circle_r, 2);
+    add_circle(&(cell_buffers->head), state->circle_y, state->circle_x, state->circle_r, DOT, 2);
     state->circle_r = sqrt(pow(y - state->circle_y, 2) + pow((x - state->circle_x) / 2, 2));
-    add_circle(NULL, state->circle_y, state->circle_x, state->circle_r, 1);
+    add_circle(NULL, state->circle_y, state->circle_x, state->circle_r, GUIDE, 1);
   }
 
   move(y, x);
@@ -360,6 +370,7 @@ init_curses()
   use_default_colors();
 
   init_pair(1, COLOR_BLACK, COLOR_BLUE);
+  init_pair(2, COLOR_BLACK, COLOR_YELLOW);
 
   raw();
   noecho();
@@ -394,13 +405,13 @@ init_game(State * state, CellBuffers * cell_buffers)
   new_cell_buffer(&(cell_buffers->head), cell_buffers->buffer_size);
   new_cell_buffer(&(cell_buffers->tmp_buf), cell_buffers->buffer_size);
 
-  add_circle(&(cell_buffers->head), 1 * HEIGHT / 4, 1 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4, 1);
-  add_circle(&(cell_buffers->head), 3 * HEIGHT / 4, 1 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4, 1);
-  add_circle(&(cell_buffers->head), 3 * HEIGHT / 4, 3 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4, 1);
-  add_circle(&(cell_buffers->head), 1 * HEIGHT / 4, 3 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4, 1);
-  add_circle(&(cell_buffers->head), 2 * HEIGHT / 4, 2 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4, 1);
+  add_circle(&(cell_buffers->head), 1 * HEIGHT / 4, 1 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4, DOT, 1);
+  add_circle(&(cell_buffers->head), 3 * HEIGHT / 4, 1 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4, DOT, 1);
+  add_circle(&(cell_buffers->head), 3 * HEIGHT / 4, 3 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4, DOT, 1);
+  add_circle(&(cell_buffers->head), 1 * HEIGHT / 4, 3 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4, DOT, 1);
+  add_circle(&(cell_buffers->head), 2 * HEIGHT / 4, 2 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4, DOT, 1);
 
-  update_stats(state, cell_buffers->next_buff);
+  update_stats(state);
 
   move(0, 0);
 }
