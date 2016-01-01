@@ -341,9 +341,17 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
   if (state->trace) update_cell(&(cell_buffers->head), y, x, true, DOT);
   if (state->stats) update_stats(state);
 
+  if (state->circle)
+  {
+    add_circle(&(cell_buffers->head), state->circle_y, state->circle_x, state->circle_r, DOT, 2);
+  }
   if (state->line)
   {
     add_line(&(cell_buffers->head), state->line_sy, state->line_sx, state->line_ey, state->line_ex, DOT, 2);
+  }
+
+  if (state->line)
+  {
     state->line_ey = y;
     state->line_ex = x;
     add_line(NULL, state->line_sy, state->line_sx, state->line_ey, state->line_ex, GUIDE, 1);
@@ -351,7 +359,6 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
 
   if (state->circle)
   {
-    add_circle(&(cell_buffers->head), state->circle_y, state->circle_x, state->circle_r, DOT, 2);
     state->circle_r = sqrt(pow(y - state->circle_y, 2) + pow((x - state->circle_x) / 2, 2));
     add_circle(NULL, state->circle_y, state->circle_x, state->circle_r, GUIDE, 1);
   }
