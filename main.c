@@ -104,10 +104,13 @@ add_line(Cells * cells, int sy, int sx, int ey, int ex)
   int w = ex - sx;
   int h = ey - sy;
 
+  w += w > 0 ? 1 : -1;
+  h += h > 0 ? 1 : -1;
+
   int len = sqrt(w*w + h*h);
 
   int i;
-  for (i = 0; i <= len; i++)
+  for (i = 0; i < len; i++)
   {
     int dy = (float)(h * i) / len;
     int dx = (float)(w * i) / len;
