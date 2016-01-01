@@ -54,6 +54,20 @@ reset_cells(Cells * cells, bool state)
 }
 
 void
+draw_buffer(Cells * cells)
+{
+  int y, x;
+  for (y = 0; y < HEIGHT; y++)
+  {
+    for (x = 0; x < WIDTH; x++)
+    {
+      Cell * cell = cells->cells + COORD(y, x);
+      mvaddch(y, x, cell->state ? DOT : ' ');
+    }
+  }
+}
+
+void
 add_circle(Cells * cells, int y, int x, int radius)
 {
   int i;
@@ -176,6 +190,11 @@ keyboard(int c, CellBuffers * cell_buffers)
     {
       draw_mode = !draw_mode;
     } break;
+    case 's':
+    {
+      memcpy((cell_buffers->head+1)->cells, cell_buffers->head->cells, cell_buffers->buffer_size);
+      cell_buffers->head++;
+    } break;
     case 'c':
     {
       reset_cells(cell_buffers->head, false);
@@ -184,9 +203,17 @@ keyboard(int c, CellBuffers * cell_buffers)
     {
       tick(cell_buffers);
     } break;
-    default:
+    case 'q':
     {
       return false;
+    } break;
+    default:
+    {
+      if ('0' <= c && c <= '9')
+      {
+        cell_buffers->head = cell_buffers->buffers + (c - '0');
+        draw_buffer(cell_buffers->head);
+      }
     }
   }
 
