@@ -5,9 +5,19 @@
 #include <ncurses.h>
 
 #include "shapes.c"
-#include "gol.h"
 
-#define N_BUFFERS 10
+
+#define HEIGHT (LINES)
+#define WIDTH (COLS)
+
+#define WIN_HEIGHT (10)
+#define WIN_WIDTH (10)
+#define WIN_STARTX (WIDTH - WIN_WIDTH)
+#define WIN_STARTY (0)
+
+#define COORD(y, x) ((y) * WIDTH + (x))
+
+#define N_BUFFERS (10)
 
 
 typedef struct
@@ -31,7 +41,9 @@ typedef struct
 
 typedef struct
 {
+  bool stats;
   bool line;
+  bool trace;
   int line_sy;
   int line_sx;
   int line_ey;
@@ -44,7 +56,6 @@ typedef struct
 } State;
 
 static int DOT = COLOR_PAIR(1) | ' ';
-static bool draw_mode = false;
 
 
 void
@@ -111,6 +122,29 @@ void
 draw_buffer(Cells * cells)
 {
   draw_buffer_range(cells, 0, 0, HEIGHT, WIDTH);
+}
+
+void
+update_stats(State * state, int next_buf)
+{
+  mvprintw(WIN_STARTY + 0, WIN_STARTX + 0, "STATS");
+  mvprintw(WIN_STARTY + 2, WIN_STARTX + 0, "TRACE %d", state->trace);
+  mvprintw(WIN_STARTY + 3, WIN_STARTX + 0, "LINE %d", state->line);
+  mvprintw(WIN_STARTY + 4, WIN_STARTX + 0, "CIRCLE %d", state->circle);
+  mvprintw(WIN_STARTY + 5, WIN_STARTX + 0, "BUFFER %2d", next_buf);
+}
+
+void
+clear_stats()
+{
+  int y, x;
+  for (y = 0; y < WIN_HEIGHT; y++)
+  {
+    for (x = 0; x < WIN_WIDTH; x++)
+    {
+      mvaddch(WIN_STARTY + y, WIN_STARTX + x, ' ');
+    }
+  }
 }
 
 void
@@ -236,11 +270,11 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
     } break;
     case 't':
     {
-      draw_mode = !draw_mode;
+      state->trace = !state->trace;
     } break;
     case 's':
     {
-      memcpy((cell_buffers->buffers + cell_buffers->next_buff++)->cells, cell_buffers->head.cells, cell_buffers->buffer_size);
+      memcpy((cell_buffers->buffers + ++cell_buffers->next_buff)->cells, cell_buffers->head.cells, cell_buffers->buffer_size);
     } break;
     case 'l':
     {
@@ -285,6 +319,11 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
     {
       return false;
     } break;
+    case '?':
+    {
+      state->stats = !state->stats;
+      clear_stats();
+    } break;
     default:
     {
       if ('0' <= c && c <= '9')
@@ -295,7 +334,8 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
     }
   }
 
-  if (draw_mode) update_cell(&(cell_buffers->head), y, x, true);
+  if (state->trace) update_cell(&(cell_buffers->head), y, x, true);
+  if (state->stats) update_stats(state, cell_buffers->next_buff);
 
   if (state->line)
   {
@@ -345,10 +385,12 @@ new_cell_buffer(Cells * cells, int size)
 void
 init_game(State * state, CellBuffers * cell_buffers)
 {
+  state->stats = true;
   state->line = false;
   state->circle = false;
+  state->trace = false;
 
-  cell_buffers->next_buff = 0;
+  cell_buffers->next_buff = -1;
   cell_buffers->buffer_size = WIDTH * HEIGHT * sizeof(int);
 
   int buf_index;
@@ -367,6 +409,8 @@ init_game(State * state, CellBuffers * cell_buffers)
   add_circle(&(cell_buffers->head), 3 * HEIGHT / 4, 3 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
   add_circle(&(cell_buffers->head), 1 * HEIGHT / 4, 3 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
   add_circle(&(cell_buffers->head), 2 * HEIGHT / 4, 2 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
+
+  update_stats(state, cell_buffers->next_buff);
 
   move(0, 0);
 }
@@ -389,10 +433,10 @@ deinit(CellBuffers * cell_buffers)
 int
 main()
 {
-  init_curses();
-
   CellBuffers cell_buffers;
   State state;
+
+  init_curses();
   init_game(&state, &cell_buffers);
 
   while (keyboard(&state, &cell_buffers, getch()));
