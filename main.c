@@ -28,6 +28,10 @@ typedef struct
   Cells * head;
 } CellBuffers;
 
+typedef struct
+{
+} State;
+
 static int DOT = COLOR_PAIR(1) | ' ';
 static bool draw_mode = false;
 
@@ -158,7 +162,7 @@ tick(CellBuffers * cell_buffers)
 }
 
 bool
-keyboard(int c, CellBuffers * cell_buffers)
+keyboard(State * state, CellBuffers * cell_buffers, int c)
 {
   int y, x;
   getyx(stdscr, y, x);
@@ -246,7 +250,7 @@ new_cell_buffer(Cells * cells, int size)
 }
 
 void
-init_game(CellBuffers * cell_buffers)
+init_game(State * state, CellBuffers * cell_buffers)
 {
   cell_buffers->buffer_size = WIDTH * HEIGHT * sizeof(int);
 
@@ -292,9 +296,10 @@ main()
   init_curses();
 
   CellBuffers cell_buffers;
-  init_game(&cell_buffers);
+  State state;
+  init_game(&state, &cell_buffers);
 
-  while (keyboard(getch(), &cell_buffers));
+  while (keyboard(&state, &cell_buffers, getch()));
 
   deinit(&cell_buffers);
 
