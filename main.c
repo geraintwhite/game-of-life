@@ -96,11 +96,13 @@ draw_buffer(Cells * cells)
 }
 
 void
-update_stats(State * state)
+update_stats(State * state, int next_buf)
 {
-  mvprintw(WIN_STARTY + 0, WIN_STARTX + 0, "STATE");
-  mvprintw(WIN_STARTY + 2, WIN_STARTX + 0, "LINE %d", state->line);
-  mvprintw(WIN_STARTY + 3, WIN_STARTX + 0, "TRACE %d", state->trace);
+  mvprintw(WIN_STARTY + 0, WIN_STARTX + 0, "STATS");
+  mvprintw(WIN_STARTY + 2, WIN_STARTX + 0, "TRACE %d", state->trace);
+  mvprintw(WIN_STARTY + 3, WIN_STARTX + 0, "LINE %d", state->line);
+  mvprintw(WIN_STARTY + 4, WIN_STARTX + 0, "CIRCLE %d", state->circle);
+  mvprintw(WIN_STARTY + 5, WIN_STARTX + 0, "BUFFER %2d", next_buf);
 }
 
 void
@@ -243,7 +245,7 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
     } break;
     case 's':
     {
-      memcpy((cell_buffers->buffers + cell_buffers->next_buff++)->cells, cell_buffers->head.cells, cell_buffers->buffer_size);
+      memcpy((cell_buffers->buffers + ++cell_buffers->next_buff)->cells, cell_buffers->head.cells, cell_buffers->buffer_size);
     } break;
     case 'l':
     {
@@ -302,7 +304,7 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
   }
 
   if (state->trace) update_cell(&(cell_buffers->head), y, x, true);
-  if (state->stats) update_stats(state);
+  if (state->stats) update_stats(state, cell_buffers->next_buff);
 
   move(y, x);
   refresh();
@@ -338,7 +340,7 @@ init_game(State * state, CellBuffers * cell_buffers)
   state->circle = false;
   state->trace = false;
 
-  cell_buffers->next_buff = 0;
+  cell_buffers->next_buff = -1;
   cell_buffers->buffer_size = WIDTH * HEIGHT * sizeof(int);
 
   int buf_index;
@@ -358,7 +360,7 @@ init_game(State * state, CellBuffers * cell_buffers)
   add_circle(&(cell_buffers->head), 1 * HEIGHT / 4, 3 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
   add_circle(&(cell_buffers->head), 2 * HEIGHT / 4, 2 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4);
 
-  update_stats(state);
+  update_stats(state, cell_buffers->next_buff);
 
   move(0, 0);
 }
