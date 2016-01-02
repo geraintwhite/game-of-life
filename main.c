@@ -392,9 +392,6 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
     }
   }
 
-  if (state->trace) update_cell(&(cell_buffers->head), y, x, true, DOT);
-  if (state->stats) update_stats(state, cell_buffers->next_buf);
-
   clear_guides(state, cell_buffers);
 
   if (state->line)
@@ -408,6 +405,9 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
     state->circle_r = sqrt(pow(y - state->circle_y, 2) + pow((x - state->circle_x) / 2, 2));
     add_circle(NULL, state->circle_y, state->circle_x, state->circle_r, GUIDE, 1);
   }
+
+  if (state->trace) update_cell(&(cell_buffers->head), y, x, true, DOT);
+  if (state->stats) update_stats(state, cell_buffers->next_buf);
 
   move(y, x);
   refresh();
