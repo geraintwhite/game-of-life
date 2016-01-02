@@ -4,7 +4,7 @@
 #include <math.h>
 #include <ncurses.h>
 
-#include "shapes.c"
+#include "maths.h"
 
 
 #define HEIGHT (LINES)
@@ -18,7 +18,6 @@
 #define COORD(y, x) ((y) * WIDTH + (x))
 
 #define N_BUFFERS (10)
-
 
 typedef struct
 {
@@ -153,16 +152,42 @@ update_stats(State * state)
 }
 
 void
-add_circle(Cells * cells, int y, int x, int radius, int chr, int state)
+add_circle(Cells * cells, int y, int x, int r, int chr, int state)
 {
-  int i;
+  if (r == 0) return;
 
-  Point points[360];
-  get_points((Circle) {radius, (Point) {y, x}}, points);
+  int a2 = 4*r*r;
+  int b2 = r*r;
+  int dx, dy, s;
 
-  for (i = 0; i < 360; i++)
+  for (dx = 0, dy = r, s = 2*b2+a2*(1-2*r); b2*dx <= a2*dy; dx++)
   {
-    update_cell(cells, points[i].y, points[i].x, state, chr);
+    update_cell(cells, y + dy, x + dx, state, chr);
+    update_cell(cells, y + dy, x - dx, state, chr);
+    update_cell(cells, y - dy, x + dx, state, chr);
+    update_cell(cells, y - dy, x - dx, state, chr);
+
+    if (s >= 0)
+    {
+      s += 4*a2*(1-dy);
+      dy--;
+    }
+    s += b2*((4*dx)+6);
+  }
+
+  for (dx = 2*r, dy = 0, s = 2*a2+b2*(1-4*r); a2*dy <= b2*dx; dy++)
+  {
+    update_cell(cells, y + dy, x + dx, state, chr);
+    update_cell(cells, y + dy, x - dx, state, chr);
+    update_cell(cells, y - dy, x + dx, state, chr);
+    update_cell(cells, y - dy, x - dx, state, chr);
+
+    if (s >= 0)
+    {
+      s += 4*b2*(1-dx);
+      dx--;
+    }
+    s += a2*((4*dy)+6);
   }
 }
 
