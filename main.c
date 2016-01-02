@@ -154,7 +154,7 @@ update_stats(State * state)
 void
 add_circle(Cells * cells, int y, int x, int r, int chr, int state)
 {
-  if (r == 0) return;
+  if (r == 0) return update_cell(cells, y, x, state, chr);
 
   int a2 = 4*r*r;
   int b2 = r*r;
