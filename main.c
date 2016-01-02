@@ -269,6 +269,19 @@ tick(CellBuffers * cell_buffers)
   refresh();
 }
 
+void
+clear_guides(State * state, CellBuffers * cell_buffers)
+{
+  if (state->circle)
+  {
+    add_circle(&(cell_buffers->head), state->circle_y, state->circle_x, state->circle_r, DOT, 2);
+  }
+  if (state->line)
+  {
+    add_line(&(cell_buffers->head), state->line_sy, state->line_sx, state->line_ey, state->line_ex, DOT, 2);
+  }
+}
+
 bool
 keyboard(State * state, CellBuffers * cell_buffers, int c)
 {
@@ -347,7 +360,15 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
     } break;
     case 'q':
     {
-      return false;
+      if (state->circle || state->line || state->trace)
+      {
+        clear_guides(state, cell_buffers);
+        state->line = state->circle = false;
+      }
+      else
+      {
+        return false;
+      }
     } break;
     case '?':
     {
@@ -367,14 +388,7 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
   if (state->trace) update_cell(&(cell_buffers->head), y, x, true, DOT);
   if (state->stats) update_stats(state);
 
-  if (state->circle)
-  {
-    add_circle(&(cell_buffers->head), state->circle_y, state->circle_x, state->circle_r, DOT, 2);
-  }
-  if (state->line)
-  {
-    add_line(&(cell_buffers->head), state->line_sy, state->line_sx, state->line_ey, state->line_ex, DOT, 2);
-  }
+  clear_guides(state, cell_buffers);
 
   if (state->line)
   {
