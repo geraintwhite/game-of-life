@@ -379,7 +379,7 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
       if (state->circle || state->line || state->trace)
       {
         clear_guides(state, cell_buffers);
-        state->line = state->circle = false;
+        state->line = state->circle = state->trace = false;
       }
       else
       {
