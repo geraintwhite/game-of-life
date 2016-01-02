@@ -282,6 +282,22 @@ clear_guides(State * state, CellBuffers * cell_buffers)
   }
 }
 
+void
+draw_guides(State * state, int y, int x)
+{
+  if (state->circle)
+  {
+    state->circle_r = sqrt(pow(y - state->circle_y, 2) + pow((x - state->circle_x) / 2, 2));
+    add_circle(NULL, state->circle_y, state->circle_x, state->circle_r, GUIDE, 1);
+  }
+  if (state->line)
+  {
+    state->line_ey = y;
+    state->line_ex = x;
+    add_line(NULL, state->line_sy, state->line_sx, state->line_ey, state->line_ex, GUIDE, 1);
+  }
+}
+
 bool
 keyboard(State * state, CellBuffers * cell_buffers, int c)
 {
@@ -389,18 +405,7 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
   if (state->stats) update_stats(state);
 
   clear_guides(state, cell_buffers);
-
-  if (state->line)
-  {
-    state->line_ey = y;
-    state->line_ex = x;
-    add_line(NULL, state->line_sy, state->line_sx, state->line_ey, state->line_ex, GUIDE, 1);
-  }
-  if (state->circle)
-  {
-    state->circle_r = sqrt(pow(y - state->circle_y, 2) + pow((x - state->circle_x) / 2, 2));
-    add_circle(NULL, state->circle_y, state->circle_x, state->circle_r, GUIDE, 1);
-  }
+  draw_guides(state, y, x);
 
   move(y, x);
   refresh();
