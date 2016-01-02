@@ -323,7 +323,8 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
     } break;
     case 's':
     {
-      memcpy((cell_buffers->buffers + ++cell_buffers->next_buf)->cells, cell_buffers->head.cells, cell_buffers->buffer_size);
+      cell_buffers->next_buf = (cell_buffers->next_buf + 1) % N_BUFFERS;
+      memcpy((cell_buffers->buffers + cell_buffers->next_buf)->cells, cell_buffers->head.cells, cell_buffers->buffer_size);
     } break;
     case 'l':
     {
