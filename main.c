@@ -42,6 +42,7 @@ typedef struct
 {
   bool stats;
   bool trace;
+  bool erase;
 
   bool line;
   int line_sy;
@@ -139,6 +140,7 @@ update_stats(State * state, int next_buf)
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "STATE");
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "");
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "trace %d", state->trace);
+  mvprintw(WIN_STARTY + i++, WIN_STARTX, "erase %d", state->erase);
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "line %d", state->line);
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "circle %d", state->circle);
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "last buffer %2d", next_buf);
@@ -317,6 +319,10 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
       Cell * cursor_cell = cell_buffers->head.cells + COORD(y, x);
       update_cell(&(cell_buffers->head), y, x, !(cursor_cell->state), DOT);
     } break;
+    case 'e':
+    {
+      state->erase = !state->erase;
+    } break;
     case 't':
     {
       state->trace = !state->trace;
@@ -330,7 +336,7 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
     {
       if (state->line)
       {
-        add_line(&(cell_buffers->head), state->line_sy, state->line_sx, state->line_ey, state->line_ex, DOT, 1);
+        add_line(&(cell_buffers->head), state->line_sy, state->line_sx, state->line_ey, state->line_ex, DOT, !state->erase);
         state->line = false;
       }
       else
@@ -346,7 +352,7 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
     {
       if (state->circle)
       {
-        add_circle(&(cell_buffers->head), state->circle_y, state->circle_x, state->circle_r, DOT, 1);
+        add_circle(&(cell_buffers->head), state->circle_y, state->circle_x, state->circle_r, DOT, !state->erase);
         state->circle = false;
       }
       else
@@ -398,15 +404,15 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
   {
     state->line_ey = y;
     state->line_ex = x;
-    add_line(NULL, state->line_sy, state->line_sx, state->line_ey, state->line_ex, GUIDE, 1);
+    add_line(NULL, state->line_sy, state->line_sx, state->line_ey, state->line_ex, GUIDE, true);
   }
   if (state->circle)
   {
     state->circle_r = sqrt(pow(y - state->circle_y, 2) + pow((x - state->circle_x) / 2, 2));
-    add_circle(NULL, state->circle_y, state->circle_x, state->circle_r, GUIDE, 1);
+    add_circle(NULL, state->circle_y, state->circle_x, state->circle_r, GUIDE, true);
   }
 
-  if (state->trace) update_cell(&(cell_buffers->head), y, x, true, DOT);
+  if (state->trace) update_cell(&(cell_buffers->head), y, x, !state->erase, DOT);
   if (state->stats) update_stats(state, cell_buffers->next_buf);
 
   move(y, x);
@@ -440,9 +446,10 @@ void
 init_game(State * state, CellBuffers * cell_buffers)
 {
   state->stats = true;
+  state->trace = false;
+  state->erase = false;
   state->line = false;
   state->circle = false;
-  state->trace = false;
 
   cell_buffers->next_buf = -1;
   cell_buffers->buffer_size = WIDTH * HEIGHT * sizeof(int);
