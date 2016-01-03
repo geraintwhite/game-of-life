@@ -290,6 +290,22 @@ clear_guides(State * state, CellBuffers * cell_buffers)
   }
 }
 
+void
+draw_guides(State * state, int y, int x)
+{
+  if (state->circle)
+  {
+    state->circle_r = sqrt(pow(y - state->circle_y, 2) + pow((x - state->circle_x) / 2, 2));
+    add_circle(NULL, state->circle_y, state->circle_x, state->circle_r, GUIDE, 1);
+  }
+  if (state->line)
+  {
+    state->line_ey = y;
+    state->line_ex = x;
+    add_line(NULL, state->line_sy, state->line_sx, state->line_ey, state->line_ex, GUIDE, 1);
+  }
+}
+
 bool
 keyboard(State * state, CellBuffers * cell_buffers, int c)
 {
@@ -365,7 +381,7 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
     } break;
     case 'c':
     {
-      reset_cells(&(cell_buffers->head), false);
+      reset_cells(&(cell_buffers->head), 0);
     } break;
     case 10:
     {
@@ -376,7 +392,7 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
       if (state->circle || state->line || state->trace)
       {
         clear_guides(state, cell_buffers);
-        state->line = state->circle = false;
+        state->line = state->circle = state->trace = false;
       }
       else
       {
@@ -399,18 +415,7 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
   }
 
   clear_guides(state, cell_buffers);
-
-  if (state->line)
-  {
-    state->line_ey = y;
-    state->line_ex = x;
-    add_line(NULL, state->line_sy, state->line_sx, state->line_ey, state->line_ex, GUIDE, true);
-  }
-  if (state->circle)
-  {
-    state->circle_r = sqrt(pow(y - state->circle_y, 2) + pow((x - state->circle_x) / 2, 2));
-    add_circle(NULL, state->circle_y, state->circle_x, state->circle_r, GUIDE, true);
-  }
+  draw_guides(state, y, x);
 
   if (state->trace) update_cell(&(cell_buffers->head), y, x, !state->erase, DOT);
   if (state->stats) update_stats(state, cell_buffers->next_buf);
