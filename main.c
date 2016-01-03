@@ -54,6 +54,12 @@ typedef struct
   int circle_y;
   int circle_x;
   int circle_r;
+
+  bool rect;
+  int rect_sy;
+  int rect_sx;
+  int rect_ey;
+  int rect_ex;
 } State;
 
 static int DOT = COLOR_PAIR(1) | ' ';
@@ -218,6 +224,15 @@ add_line(Cells * cells, int sy, int sx, int ey, int ex, int chr, int state)
   }
 }
 
+void
+add_rect(Cells * cells, int sy, int sx, int ey, int ex, int chr, int state)
+{
+  add_line(cells, sy, sx, sy, ex, chr, state);
+  add_line(cells, sy, ex, ey, ex, chr, state);
+  add_line(cells, ey, ex, ey, sx, chr, state);
+  add_line(cells, ey, sx, sy, sx, chr, state);
+}
+
 int
 neighbours(Cells * cells, int y, int x)
 {
@@ -288,6 +303,10 @@ clear_guides(State * state, CellBuffers * cell_buffers)
   {
     add_line(&(cell_buffers->head), state->line_sy, state->line_sx, state->line_ey, state->line_ex, DOT, 2);
   }
+  if (state->rect)
+  {
+    add_rect(&(cell_buffers->head), state->rect_sy, state->rect_sx, state->rect_ey, state->rect_ex, DOT, 2);
+  }
 }
 
 void
@@ -303,6 +322,12 @@ draw_guides(State * state, int y, int x)
     state->line_ey = y;
     state->line_ex = x;
     add_line(NULL, state->line_sy, state->line_sx, state->line_ey, state->line_ex, GUIDE, 1);
+  }
+  if (state->rect)
+  {
+    state->rect_ey = y;
+    state->rect_ex = x;
+    add_rect(NULL, state->rect_sy, state->rect_sx, state->rect_ey, state->rect_ex, GUIDE, 1);
   }
 }
 
@@ -379,6 +404,22 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
         state->circle = true;
       }
     } break;
+    case 'r':
+    {
+      if (state->rect)
+      {
+        add_rect(&(cell_buffers->head), state->rect_sy, state->rect_sx, state->rect_ey, state->rect_ex, DOT, !state->erase);
+        state->rect = false;
+      }
+      else
+      {
+        state->rect_sy = y;
+        state->rect_sx = x;
+        state->rect_ey = y;
+        state->rect_ex = x;
+        state->rect = true;
+      }
+    } break;
     case 'c':
     {
       reset_cells(&(cell_buffers->head), 0);
@@ -389,10 +430,10 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
     } break;
     case 'q':
     {
-      if (state->circle || state->line || state->trace)
+      if (state->circle || state->line || state->rect || state->trace)
       {
         clear_guides(state, cell_buffers);
-        state->line = state->circle = state->trace = false;
+        state->circle = state->line = state->rect = state->trace = false;
       }
       else
       {
@@ -455,6 +496,7 @@ init_game(State * state, CellBuffers * cell_buffers)
   state->erase = false;
   state->line = false;
   state->circle = false;
+  state->rect = false;
 
   cell_buffers->next_buf = -1;
   cell_buffers->buffer_size = WIDTH * HEIGHT * sizeof(int);
