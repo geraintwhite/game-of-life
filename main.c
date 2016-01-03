@@ -149,6 +149,7 @@ update_stats(State * state, int next_buf)
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "erase %d", state->erase);
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "line %d", state->line);
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "circle %d", state->circle);
+  mvprintw(WIN_STARTY + i++, WIN_STARTX, "circle %d", state->rect);
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "last buffer %2d", next_buf);
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "");
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "");
@@ -157,6 +158,7 @@ update_stats(State * state, int next_buf)
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "trace (t)");
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "circle (o)");
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "line (l)");
+  mvprintw(WIN_STARTY + i++, WIN_STARTX, "rectangle (r)");
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "clear (c)");
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "save to buffer (s)");
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "load from buffer (0-9)");
