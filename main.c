@@ -36,6 +36,9 @@ typedef struct
   Cells buffers[N_BUFFERS];
   Cells tmp_buf;
   Cells head;
+  Cells copied;
+  int copied_dy;
+  int copied_dx;
 } CellBuffers;
 
 typedef struct
@@ -60,6 +63,12 @@ typedef struct
   int rect_sx;
   int rect_ey;
   int rect_ex;
+
+  bool copy;
+  int copy_sy;
+  int copy_sx;
+  int copy_ey;
+  int copy_ex;
 } State;
 
 static int DOT = COLOR_PAIR(1) | ' ';
@@ -99,6 +108,34 @@ reset_cells(Cells * cells, int state)
     for (x = 0; x < WIDTH; x++)
     {
       update_cell(cells, y, x, state, DOT);
+    }
+  }
+}
+
+void
+copy_buffer_range(Cells * from, Cells * to, int from_sy, int from_sx, int from_ey, int from_ex, int to_sy, int to_sx)
+{
+  if (from_sy > from_ey)
+  {
+    int tmp = from_sy;
+    from_sy = from_ey;
+    from_ey = tmp;
+  }
+  if (from_sx > from_ex)
+  {
+    int tmp = from_sx;
+    from_sx = from_ex;
+    from_ex = tmp;
+  }
+
+  int dy, dx;
+  for (dy = 0; dy <= (from_ey-from_sy); dy++)
+  {
+    for (dx = 0; dx <= (from_ex-from_sx); dx++)
+    {
+      Cell * cell_from = from->cells + COORD(from_sy+dy, from_sx+dx);
+      Cell * cell_to = to->cells + COORD(to_sy+dy, to_sx+dx);
+      *cell_to = *cell_from;
     }
   }
 }
@@ -150,6 +187,7 @@ update_stats(State * state, int next_buf)
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "line %d", state->line);
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "circle %d", state->circle);
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "circle %d", state->rect);
+  mvprintw(WIN_STARTY + i++, WIN_STARTX, "copy %d", state->copy);
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "last buffer %2d", next_buf);
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "");
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "");
@@ -159,6 +197,8 @@ update_stats(State * state, int next_buf)
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "circle (o)");
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "line (l)");
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "rectangle (r)");
+  mvprintw(WIN_STARTY + i++, WIN_STARTX, "copy (d)");
+  mvprintw(WIN_STARTY + i++, WIN_STARTX, "paste (p)");
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "clear (c)");
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "save to buffer (s)");
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "load from buffer (0-9)");
@@ -309,6 +349,10 @@ clear_guides(State * state, CellBuffers * cell_buffers)
   {
     add_rect(&(cell_buffers->head), state->rect_sy, state->rect_sx, state->rect_ey, state->rect_ex, DOT, 2);
   }
+  if (state->copy)
+  {
+    add_rect(&(cell_buffers->head), state->copy_sy, state->copy_sx, state->copy_ey, state->copy_ex, DOT, 2);
+  }
 }
 
 void
@@ -331,6 +375,27 @@ draw_guides(State * state, int y, int x)
     state->rect_ex = x;
     add_rect(NULL, state->rect_sy, state->rect_sx, state->rect_ey, state->rect_ex, GUIDE, 1);
   }
+  if (state->copy)
+  {
+    state->copy_ey = y;
+    state->copy_ex = x;
+    add_rect(NULL, state->copy_sy, state->copy_sx, state->copy_ey, state->copy_ex, GUIDE, 1);
+  }
+}
+
+void
+copy(CellBuffers * cell_buffers, int sy, int sx, int ey, int ex)
+{
+  copy_buffer_range(&(cell_buffers->head), &(cell_buffers->copied), sy, sx, ey, ex, 0, 0);
+  cell_buffers->copied_dy = ey - sy;
+  cell_buffers->copied_dx = ex - sx;
+}
+
+void
+paste(CellBuffers * cell_buffers, int y, int x)
+{
+  copy_buffer_range(&(cell_buffers->copied), &(cell_buffers->head), 0, 0, cell_buffers->copied_dy, cell_buffers->copied_dx, y, x);
+  draw_buffer_range(&(cell_buffers->head), y, x, y + cell_buffers->copied_dy, x + cell_buffers->copied_dx);
 }
 
 bool
@@ -426,16 +491,37 @@ keyboard(State * state, CellBuffers * cell_buffers, int c)
     {
       reset_cells(&(cell_buffers->head), 0);
     } break;
+    case 'd':
+    {
+      if (state->copy)
+      {
+        clear_guides(state, cell_buffers);
+        copy(cell_buffers, state->copy_sy, state->copy_sx, state->copy_ey, state->copy_ex);
+        state->copy = false;
+      }
+      else
+      {
+        state->copy_sy = y;
+        state->copy_sx = x;
+        state->copy_ey = y;
+        state->copy_ex = x;
+        state->copy = true;
+      }
+    } break;
+    case 'p':
+    {
+      paste(cell_buffers, y, x);
+    } break;
     case 10:
     {
       tick(cell_buffers);
     } break;
     case 'q':
     {
-      if (state->circle || state->line || state->rect || state->trace)
+      if (state->circle || state->line || state->rect || state->trace || state->copy)
       {
         clear_guides(state, cell_buffers);
-        state->circle = state->line = state->rect = state->trace = false;
+        state->circle = state->line = state->rect = state->trace = state->copy = false;
       }
       else
       {
@@ -499,6 +585,7 @@ init_game(State * state, CellBuffers * cell_buffers)
   state->line = false;
   state->circle = false;
   state->rect = false;
+  state->copy = false;
 
   cell_buffers->next_buf = -1;
   cell_buffers->buffer_size = WIDTH * HEIGHT * sizeof(int);
@@ -513,6 +600,7 @@ init_game(State * state, CellBuffers * cell_buffers)
 
   new_cell_buffer(&(cell_buffers->head), cell_buffers->buffer_size);
   new_cell_buffer(&(cell_buffers->tmp_buf), cell_buffers->buffer_size);
+  new_cell_buffer(&(cell_buffers->copied), cell_buffers->buffer_size);
 
   add_circle(&(cell_buffers->head), 1 * HEIGHT / 4, 1 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4, DOT, 1);
   add_circle(&(cell_buffers->head), 3 * HEIGHT / 4, 1 * WIDTH / 4, (2 * HEIGHT > WIDTH ? WIDTH / 4 : HEIGHT) / 4, DOT, 1);
