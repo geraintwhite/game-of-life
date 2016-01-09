@@ -186,7 +186,7 @@ update_stats(State * state, int next_buf)
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "erase %d", state->erase);
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "line %d", state->line);
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "circle %d", state->circle);
-  mvprintw(WIN_STARTY + i++, WIN_STARTX, "circle %d", state->rect);
+  mvprintw(WIN_STARTY + i++, WIN_STARTX, "rectangle %d", state->rect);
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "copy %d", state->copy);
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "last buffer %2d", next_buf);
   mvprintw(WIN_STARTY + i++, WIN_STARTX, "");
